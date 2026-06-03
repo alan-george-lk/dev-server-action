@@ -1,0 +1,11 @@
+name: LiveKit Dev Server
+description: |
+    Install and run a LiveKit server in development mode for end-to-end testing.
+branding:
+  icon: server
+  color: blue
+inputs: {}
+outputs: {}
+runs:
+   using: composite
+   steps: []
