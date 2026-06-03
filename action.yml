@@ -4,8 +4,90 @@ description: |
 branding:
   icon: server
   color: blue
-inputs: {}
-outputs: {}
+inputs:
+  github-token:
+    description: GitHub token
+    required: true
+outputs:
+  pid:
+    description: Process ID
+    value: ${{ steps.start.outputs.pid }}
 runs:
    using: composite
-   steps: []
+   steps:
+    - name: Brew install
+      if: runner.os == 'macOS'
+      shell: bash
+      env:
+        HOMEBREW_NO_ENV_HINTS: 1
+      run: brew install livekit
+    - name: Resolve latest version
+      if: runner.os == 'Linux' || runner.os == 'Windows'
+      id: version
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        tag="$(gh api repos/livekit/livekit/releases/latest --jq '.tag_name')"
+        if [ -z "$tag" ]; then
+          echo "::error::Failed to resolve version tag"
+          exit 1
+        fi
+        echo "Latest version tag: $tag"
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+    - name: Download release artifact
+      if: runner.os == 'Linux' || runner.os == 'Windows'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          Linux-X64)     suffix='linux_amd64.tar.gz' ;;
+          Linux-ARM64)   suffix='linux_arm64.tar.gz' ;;
+          Windows-X64)   suffix='windows_amd64.zip' ;;
+          Windows-ARM64) suffix='windows_arm64.zip' ;;
+          *) echo "Unsupported platform: ${RUNNER_OS}-${RUNNER_ARCH}"; exit 1 ;;
+        esac
+        echo "::debug::Artifact suffix: $suffix"
+
+        gh release download "${{ steps.version.outputs.tag }}" \
+          --repo livekit/livekit \
+          --pattern "*_${suffix}" \
+          --output release-archive
+
+        test -f release-archive || {
+          echo "::error::Release artifact was not downloaded"
+          exit 1
+        }
+
+    - name: Extract release artifact
+      if: runner.os == 'Linux' || runner.os == 'Windows'
+      shell: bash
+      run: |
+        case "${RUNNER_OS}" in
+          Linux)
+            tar -xzf ./release-archive
+            chmod +x ./livekit-server
+            ;;
+          Windows)
+            unzip -o ./release-archive
+            ;;
+        esac
+
+    - name: Run server
+      id: start
+      shell: bash
+      run: |
+        case "${RUNNER_OS}" in
+          macOS)   livekit_cmd="livekit-server" ;;
+          Linux)   livekit_cmd="./livekit-server" ;;
+          Windows) livekit_cmd="./livekit-server.exe" ;;
+          *) echo "::error::Unsupported platform: ${RUNNER_OS}"; exit 1 ;;
+        esac
+
+        "$livekit_cmd" --version
+
+        "$livekit_cmd" --dev > livekit.log 2>&1 &
+        pid=$!
+        echo "Running server in the background: pid=$pid"
+        echo "pid=$pid" >> "$GITHUB_OUTPUT"
