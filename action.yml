@@ -57,9 +57,9 @@ runs:
         gh release download "${{ steps.version.outputs.tag }}" \
           --repo livekit/livekit \
           --pattern "*_${suffix}" \
-          --output release-archive
+          --output "$RUNNER_TEMP/release-archive"
 
-        test -f release-archive || {
+        test -f "$RUNNER_TEMP/release-archive" || {
           echo "::error::Release artifact was not downloaded"
           exit 1
         }
@@ -69,8 +69,8 @@ runs:
       shell: bash
       run: |
         case "${RUNNER_OS}" in
-          Linux) tar -xzf ./release-archive && chmod +x ./livekit-server ;;
-          Windows) unzip -o ./release-archive ;;
+          Linux) tar -xzf "$RUNNER_TEMP/release-archive" -C "$RUNNER_TEMP" && chmod +x "$RUNNER_TEMP/livekit-server" ;;
+          Windows) unzip -o "$RUNNER_TEMP/release-archive" -d "$RUNNER_TEMP" ;;
         esac
 
     - name: Run server
@@ -81,14 +81,14 @@ runs:
       run: |
         case "${RUNNER_OS}" in
           macOS)   livekit_cmd="livekit-server" ;;
-          Linux)   livekit_cmd="./livekit-server" ;;
-          Windows) livekit_cmd="./livekit-server.exe" ;;
+          Linux)   livekit_cmd="$RUNNER_TEMP/livekit-server" ;;
+          Windows) livekit_cmd="$RUNNER_TEMP/livekit-server.exe" ;;
           *) echo "::error::Unsupported platform: ${RUNNER_OS}"; exit 1 ;;
         esac
 
         "$livekit_cmd" --version
 
-        "$livekit_cmd" --dev $LIVEKIT_ARGS > livekit.log 2>&1 &
+        "$livekit_cmd" --dev $LIVEKIT_ARGS > "$RUNNER_TEMP/livekit.log" 2>&1 &
         pid=$!
         echo "Running server in the background: pid=$pid"
         echo "pid=$pid" >> "$GITHUB_OUTPUT"
