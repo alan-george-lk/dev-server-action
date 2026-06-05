@@ -18,7 +18,22 @@ jobs:
      steps:
        - name: Checkout
          uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-       - name: Run LiveKit Dev Server
+       - name: Run LiveKit server
          uses: ./
          with:
            github-token: ${{ github.token }}
+       - name: Health check
+         shell: bash
+         run: |
+            set -euo pipefail
+            for i in $(seq 1 30); do
+              body="$(curl -fsS http://localhost:7880/ || true)"
+              if [ "$body" = "OK" ]; then
+                echo "Server is healthy"
+                exit 0
+              fi
+              echo "Waiting for server... ($i)"
+              sleep 1
+            done
+            echo "::error::Server is not running"
+            exit 1
