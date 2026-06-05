@@ -76,10 +76,8 @@ runs:
           Windows) unzip -o "$RUNNER_TEMP/release-archive" -d "$RUNNER_TEMP" ;;
         esac
 
-    - name: Install yq (Windows)
-      if: runner.os == 'Windows'
-      shell: bash
-      run: choco install yq --no-progress -y
+    - name: Install yq
+      uses: dcarbone/install-yq-action@4075b4dca348d74bd83f2bf82d30f25d7c54539b
 
     - name: Build merged config
       shell: bash
