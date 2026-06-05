@@ -8,6 +8,10 @@ inputs:
   github-token:
     description: GitHub token
     required: true
+  args:
+    description: Additional arguments to pass to the LiveKit server
+    required: false
+    default: ""
 outputs:
   pid:
     description: Process ID
@@ -77,6 +81,8 @@ runs:
     - name: Run server
       id: start
       shell: bash
+      env:
+        LIVEKIT_ARGS: ${{ inputs.args }}
       run: |
         case "${RUNNER_OS}" in
           macOS)   livekit_cmd="livekit-server" ;;
@@ -87,7 +93,7 @@ runs:
 
         "$livekit_cmd" --version
 
-        "$livekit_cmd" --dev > livekit.log 2>&1 &
+        "$livekit_cmd" --dev $LIVEKIT_ARGS > livekit.log 2>&1 &
         pid=$!
         echo "Running server in the background: pid=$pid"
         echo "pid=$pid" >> "$GITHUB_OUTPUT"
