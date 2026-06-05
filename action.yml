@@ -106,11 +106,11 @@ runs:
 
         "$livekit_cmd" --version
 
-        "$livekit_cmd" --config "$RUNNER_TEMP/livekit.yaml" --dev > "$RUNNER_TEMP/livekit.log" 2>&1 &
+        "$livekit_cmd" --config "$RUNNER_TEMP/livekit.yaml" --dev > "$RUNNER_TEMP/livekit.jsonl" 2>&1 &
         pid=$!
         echo "Running server in the background: pid=$pid"
         echo "pid=$pid" >> "$GITHUB_OUTPUT"
-        echo "log-path=$RUNNER_TEMP/livekit.log" >> "$GITHUB_OUTPUT"
+        echo "log-path=$RUNNER_TEMP/livekit.jsonl" >> "$GITHUB_OUTPUT"
 
     - name: Health check
       shell: bash
