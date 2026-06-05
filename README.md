@@ -1,5 +1,7 @@
 # LiveKit Dev Server Action
 
+[![CI](https://github.com/livekit/dev-server-action/actions/workflows/ci.yml/badge.svg)](https://github.com/livekit/dev-server-action/actions/workflows/ci.yml)
+
 Install and run a LiveKit server in development mode for end-to-end testing.
 
 ## Usage
