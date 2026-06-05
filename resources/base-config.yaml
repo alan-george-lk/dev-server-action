@@ -1,0 +1,2 @@
+# Base configuration passed to the LiveKit server.
+logging: { json: true }
