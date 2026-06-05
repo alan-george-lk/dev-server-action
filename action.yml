@@ -16,6 +16,9 @@ outputs:
   pid:
     description: Process ID
     value: ${{ steps.start.outputs.pid }}
+  log-path:
+    description: Path to the server log file
+    value: ${{ steps.start.outputs.log-path }}
 runs:
    using: composite
    steps:
@@ -92,6 +95,7 @@ runs:
         pid=$!
         echo "Running server in the background: pid=$pid"
         echo "pid=$pid" >> "$GITHUB_OUTPUT"
+        echo "log-path=$RUNNER_TEMP/livekit.log" >> "$GITHUB_OUTPUT"
 
     - name: Health check
       shell: bash
