@@ -69,13 +69,8 @@ runs:
       shell: bash
       run: |
         case "${RUNNER_OS}" in
-          Linux)
-            tar -xzf ./release-archive
-            chmod +x ./livekit-server
-            ;;
-          Windows)
-            unzip -o ./release-archive
-            ;;
+          Linux) tar -xzf ./release-archive && chmod +x ./livekit-server ;;
+          Windows) unzip -o ./release-archive ;;
         esac
 
     - name: Run server
