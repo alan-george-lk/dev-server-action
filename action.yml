@@ -4,8 +4,127 @@ description: |
 branding:
   icon: server
   color: blue
-inputs: {}
-outputs: {}
+inputs:
+  github-token:
+    description: GitHub token
+    required: true
+  config:
+    description: Server configuration YAML
+    required: false
+    default: ""
+outputs:
+  pid:
+    description: Process ID
+    value: ${{ steps.start.outputs.pid }}
+  log-path:
+    description: Path to the server log file
+    value: ${{ steps.start.outputs.log-path }}
 runs:
    using: composite
-   steps: []
+   steps:
+    - name: Brew install
+      if: runner.os == 'macOS'
+      shell: bash
+      env:
+        HOMEBREW_NO_ENV_HINTS: 1
+      run: brew install livekit
+    - name: Resolve latest version
+      if: runner.os == 'Linux' || runner.os == 'Windows'
+      id: version
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        tag="$(gh api repos/livekit/livekit/releases/latest --jq '.tag_name')"
+        if [ -z "$tag" ]; then
+          echo "::error::Failed to resolve version tag"
+          exit 1
+        fi
+        echo "Latest version tag: $tag"
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+    - name: Download release artifact
+      if: runner.os == 'Linux' || runner.os == 'Windows'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          Linux-X64)     suffix='linux_amd64.tar.gz' ;;
+          Linux-ARM64)   suffix='linux_arm64.tar.gz' ;;
+          Windows-X64)   suffix='windows_amd64.zip' ;;
+          Windows-ARM64) suffix='windows_arm64.zip' ;;
+          *) echo "Unsupported platform: ${RUNNER_OS}-${RUNNER_ARCH}"; exit 1 ;;
+        esac
+        echo "::debug::Artifact suffix: $suffix"
+
+        gh release download "${{ steps.version.outputs.tag }}" \
+          --repo livekit/livekit \
+          --pattern "*_${suffix}" \
+          --output "$RUNNER_TEMP/release-archive"
+
+        test -f "$RUNNER_TEMP/release-archive" || {
+          echo "::error::Release artifact was not downloaded"
+          exit 1
+        }
+
+    - name: Extract release artifact
+      if: runner.os == 'Linux' || runner.os == 'Windows'
+      shell: bash
+      run: |
+        case "${RUNNER_OS}" in
+          Linux) tar -xzf "$RUNNER_TEMP/release-archive" -C "$RUNNER_TEMP" && chmod +x "$RUNNER_TEMP/livekit-server" ;;
+          Windows) unzip -o "$RUNNER_TEMP/release-archive" -d "$RUNNER_TEMP" ;;
+        esac
+
+    - name: Install yq (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: choco install yq --no-progress -y
+
+    - name: Build merged config
+      shell: bash
+      env:
+        LIVEKIT_CONFIG_OVERLAY: ${{ inputs.config }}
+      run: |
+        set -u
+        printf '%s' "$LIVEKIT_CONFIG_OVERLAY" > "$RUNNER_TEMP/overlay.yaml"
+        yq ea '. as $item ireduce ({}; . * $item)' \
+          "$GITHUB_ACTION_PATH/resources/base-config.yaml" "$RUNNER_TEMP/overlay.yaml" \
+          > "$RUNNER_TEMP/livekit.yaml"
+        echo "::group::Merged LiveKit config"
+        cat "$RUNNER_TEMP/livekit.yaml"
+        echo "::endgroup::"
+
+    - name: Run server
+      id: start
+      shell: bash
+      run: |
+        case "${RUNNER_OS}" in
+          macOS)   livekit_cmd="livekit-server" ;;
+          Linux)   livekit_cmd="$RUNNER_TEMP/livekit-server" ;;
+          Windows) livekit_cmd="$RUNNER_TEMP/livekit-server.exe" ;;
+          *) echo "::error::Unsupported platform: ${RUNNER_OS}"; exit 1 ;;
+        esac
+
+        "$livekit_cmd" --version
+
+        "$livekit_cmd" --config "$RUNNER_TEMP/livekit.yaml" --dev > "$RUNNER_TEMP/livekit.jsonl" 2>&1 &
+        pid=$!
+        echo "Running server in the background: pid=$pid"
+        echo "pid=$pid" >> "$GITHUB_OUTPUT"
+        echo "log-path=$RUNNER_TEMP/livekit.jsonl" >> "$GITHUB_OUTPUT"
+
+    - name: Health check
+      shell: bash
+      run: |
+        set -u
+        for i in $(seq 1 10); do
+          if [ "$(curl -fsS http://localhost:7880/ || true)" = "OK" ]; then
+            echo "Server passed health check"
+            exit 0
+          fi
+          echo "Waiting for server... (retry $i/10)"
+          sleep 1
+        done
+        echo "::error::Server did not pass health check"
+        exit 1
