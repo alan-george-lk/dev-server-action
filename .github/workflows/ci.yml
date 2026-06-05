@@ -22,18 +22,3 @@ jobs:
          uses: ./
          with:
            github-token: ${{ github.token }}
-       - name: Health check
-         shell: bash
-         run: |
-            set -euo pipefail
-            for i in $(seq 1 30); do
-              body="$(curl -fsS http://localhost:7880/ || true)"
-              if [ "$body" = "OK" ]; then
-                echo "Server is healthy"
-                exit 0
-              fi
-              echo "Waiting for server... ($i)"
-              sleep 1
-            done
-            echo "::error::Server is not running"
-            exit 1

@@ -97,3 +97,18 @@ runs:
         pid=$!
         echo "Running server in the background: pid=$pid"
         echo "pid=$pid" >> "$GITHUB_OUTPUT"
+
+    - name: Health check
+      shell: bash
+      run: |
+        set -u
+        for i in $(seq 1 10); do
+          if [ "$(curl -fsS http://localhost:7880/ || true)" = "OK" ]; then
+            echo "Server passed health check"
+            exit 0
+          fi
+          echo "Waiting for server... (retry $i/10)"
+          sleep 1
+        done
+        echo "::error::Server did not pass health check"
+        exit 1
