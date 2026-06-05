@@ -15,7 +15,7 @@ Install and run a LiveKit server in development mode for end-to-end testing.
 | Name           | Required | Default | Description                                                          |
 | -------------- | -------- | ------- | -------------------------------------------------------------------- |
 | `github-token` | Yes      |         | Token used to download the LiveKit server release.                   |
-| `config`       | No       | `""`    | Partial LiveKit config (YAML), deep-merged over the action defaults. |
+| `config`       | No       | `""`    | Server configuration YAML
 
 ## Outputs
 
