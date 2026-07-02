@@ -12,12 +12,25 @@ Install and run a LiveKit server in development mode for end-to-end testing.
     github-token: ${{ github.token }}
 ```
 
+Pin a specific server release or commit (builds from source on macOS and for commit SHAs):
+
+```yaml
+- uses: livekit/dev-server-action@v1
+  with:
+    github-token: ${{ github.token }}
+    version: a47e21b6cb945aabee88c98650366cef8cbf7a99
+    config: |
+      enable_data_tracks: true
+      enable_participant_data_blob: true
+```
+
 ## Inputs
 
-| Name           | Required | Default | Description                                                          |
-| -------------- | -------- | ------- | -------------------------------------------------------------------- |
-| `github-token` | Yes      |         | Token used to download the LiveKit server release.                   |
-| `config`       | No       | `""`    | Server configuration YAML
+| Name           | Required | Default | Description                                                                                      |
+| -------------- | -------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `github-token` | Yes      |         | Token used to download the LiveKit server release or resolve the latest tag.                     |
+| `version`      | No       | `""`    | Release tag (e.g. `v1.13.2`) or commit SHA from `livekit/livekit`. Empty uses latest release.    |
+| `config`       | No       | `""`    | Server configuration YAML merged over the action's base dev config.                              |
 
 ## Outputs
 
