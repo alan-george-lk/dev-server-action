@@ -29,3 +29,25 @@ jobs:
           name: server-log-${{ matrix.os }}
           path: ${{ steps.server.outputs.log-path }}
           if-no-files-found: error
+
+   test-version-pin:
+     name: Test version pin (ubuntu)
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout
+         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+       - name: Run LiveKit server (pinned commit)
+         id: server
+         uses: ./
+         with:
+           github-token: ${{ github.token }}
+           version: a47e21b6cb945aabee88c98650366cef8cbf7a99
+           config: |
+             enable_data_tracks: true
+             enable_participant_data_blob: true
+       - name: Upload server log
+         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+         with:
+          name: server-log-version-pin
+          path: ${{ steps.server.outputs.log-path }}
+          if-no-files-found: error
