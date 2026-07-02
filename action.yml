@@ -85,7 +85,7 @@ runs:
 
     - name: Setup Go
       if: steps.resolve.outputs.mode == 'source'
-      uses: actions/setup-go@40a3f19a49f82516b2f1a6604d1e33c0c247d7f5 # v5.6.0
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
       with:
         go-version: "1.26"
         cache: false
