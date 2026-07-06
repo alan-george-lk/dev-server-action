@@ -12,7 +12,16 @@ Install and run a LiveKit server in development mode for end-to-end testing.
     github-token: ${{ github.token }}
 ```
 
-Pin a specific server release or commit (builds from source on macOS and for commit SHAs):
+Pin a release tag or commit from [livekit/livekit](https://github.com/livekit/livekit):
+
+```yaml
+- uses: livekit/dev-server-action@v1
+  with:
+    github-token: ${{ github.token }}
+    version: v1.13.3
+```
+
+Build from a specific commit (useful when testing server changes not yet released):
 
 ```yaml
 - uses: livekit/dev-server-action@v1
@@ -26,11 +35,14 @@ Pin a specific server release or commit (builds from source on macOS and for com
 
 ## Inputs
 
-| Name           | Required | Default | Description                                                                                      |
-| -------------- | -------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `github-token` | Yes      |         | Token used to download the LiveKit server release or resolve the latest tag.                     |
-| `version`      | No       | `""`    | Release tag (e.g. `v1.13.2`) or commit SHA from `livekit/livekit`. Empty uses latest release.    |
-| `config`       | No       | `""`    | Server configuration YAML merged over the action's base dev config.                              |
+| Name           | Required | Default  | Description                                                                        |
+| ---------------| ---------| ---------| -----------------------------------------------------------------------------------|
+| `github-token` | Yes      |          | Token used to download releases or resolve the latest tag.                         |
+| `version`      | No       | `latest` | `latest`, release tag (`v1.13.3` or `1.13.3`), or commit SHA from livekit/livekit. |
+| `config`       | No       | `""`     | Server configuration YAML merged over the action's base dev config.                |
+
+Linux and Windows download release artifacts for tags. Commit SHAs and pinned tags on
+macOS build from source. `latest` on macOS uses Homebrew.
 
 ## Outputs
 

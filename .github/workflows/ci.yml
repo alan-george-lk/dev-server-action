@@ -30,7 +30,17 @@ jobs:
           path: ${{ steps.server.outputs.log-path }}
           if-no-files-found: error
   test-version-input:
-    name: Test version input
+    name: Test version input (${{ matrix.version-label }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: v1.13.3
+            version-label: tag
+          - version: 1.13.3
+            version-label: semver
+          - version: a47e21b6cb945aabee88c98650366cef8cbf7a99
+            version-label: sha
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,10 +50,10 @@ jobs:
         uses: ./
         with:
           github-token: ${{ github.token }}
-          version: a47e21b6cb945aabee88c98650366cef8cbf7a99
+          version: ${{ matrix.version }}
       - name: Upload server log
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: server-log-version-input
+          name: server-log-version-${{ matrix.version-label }}
           path: ${{ steps.server.outputs.log-path }}
           if-no-files-found: error

@@ -10,11 +10,11 @@ inputs:
     required: true
   version:
     description: |
-      livekit-server version to run: a release tag (e.g. v1.13.2) or a commit SHA
-      from github.com/livekit/livekit. When empty, Linux and Windows use the latest
-      release; macOS installs the current Homebrew formula.
+      livekit-server version to run: latest, a release tag (e.g. v1.13.3 or 1.13.3),
+      or a commit SHA from github.com/livekit/livekit. macOS uses Homebrew for latest;
+      pinned tags and SHAs build from source.
     required: false
-    default: ""
+    default: latest
   config:
     description: Server configuration YAML
     required: false
@@ -38,7 +38,8 @@ runs:
       run: |
         set -euo pipefail
         version="${VERSION_INPUT//[[:space:]]/}"
-        if [ -z "$version" ]; then
+
+        if [ -z "$version" ] || [ "$version" = "latest" ]; then
           if [ "${RUNNER_OS}" = "macOS" ]; then
             echo "mode=brew" >> "$GITHUB_OUTPUT"
             echo "Resolved livekit-server install mode: Homebrew (latest formula)"
@@ -55,17 +56,6 @@ runs:
           exit 0
         fi
 
-        if [[ "$version" =~ ^v[0-9] ]]; then
-          if [ "${RUNNER_OS}" = "macOS" ]; then
-            echo "mode=source" >> "$GITHUB_OUTPUT"
-          else
-            echo "mode=release" >> "$GITHUB_OUTPUT"
-          fi
-          echo "ref=$version" >> "$GITHUB_OUTPUT"
-          echo "Resolved livekit-server release: $version"
-          exit 0
-        fi
-
         if [[ "$version" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
           echo "mode=source" >> "$GITHUB_OUTPUT"
           echo "ref=$version" >> "$GITHUB_OUTPUT"
@@ -73,7 +63,25 @@ runs:
           exit 0
         fi
 
-        echo "::error::Invalid version '$version' (expected release tag like v1.13.2 or commit SHA)"
+        ref="$version"
+        case "$ref" in
+          v*) ;;
+          *) ref="v$ref" ;;
+        esac
+
+        if [[ "$ref" =~ ^v[0-9] ]]; then
+          gh release view "$ref" --repo livekit/livekit >/dev/null
+          if [ "${RUNNER_OS}" = "macOS" ]; then
+            echo "mode=source" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=release" >> "$GITHUB_OUTPUT"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Resolved livekit-server release: $ref"
+          exit 0
+        fi
+
+        echo "::error::Invalid version '$version' (expected latest, release tag like v1.13.3 or 1.13.3, or commit SHA)"
         exit 1
 
     - name: Brew install
