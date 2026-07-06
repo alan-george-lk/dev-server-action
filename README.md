@@ -6,8 +6,10 @@ Install and run a LiveKit server in development mode for end-to-end testing.
 
 ## Usage
 
+> Note: replace <sha> with pinned action or server version/commit SHA.
+
 ```yaml
-- uses: livekit/dev-server-action@v1
+- uses: livekit/dev-server-action@<sha>
   with:
     github-token: ${{ github.token }}
 ```
@@ -15,7 +17,7 @@ Install and run a LiveKit server in development mode for end-to-end testing.
 Pin a release tag or commit from [livekit/livekit](https://github.com/livekit/livekit):
 
 ```yaml
-- uses: livekit/dev-server-action@v1
+- uses: livekit/dev-server-action@<sha>
   with:
     github-token: ${{ github.token }}
     version: v1.13.3
@@ -24,10 +26,10 @@ Pin a release tag or commit from [livekit/livekit](https://github.com/livekit/li
 Build from a specific commit:
 
 ```yaml
-- uses: livekit/dev-server-action@v1
+- uses: livekit/dev-server-action@<sha>
   with:
     github-token: ${{ github.token }}
-    version: a47e21b6cb945aabee88c98650366cef8cbf7a99
+    version: <sha>
     config: |
       logging:
         level: debug
@@ -36,10 +38,10 @@ Build from a specific commit:
 Pass in [config parameters](https://github.com/livekit/livekit/blob/master/config-sample.yaml) to further test specific features:
 
 ```yaml
-- uses: livekit/dev-server-action@v1
+- uses: livekit/dev-server-action@<sha>
   with:
     github-token: ${{ github.token }}
-    version: a47e21b6cb945aabee88c98650366cef8cbf7a99
+    version: <sha>
     config: |
       logging:
         level: debug
