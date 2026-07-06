@@ -10,9 +10,8 @@ inputs:
     required: true
   version:
     description: |
-      livekit-server version to run: latest, a release tag (e.g. v1.13.3 or 1.13.3),
-      or a commit SHA from github.com/livekit/livekit. macOS uses Homebrew for latest;
-      pinned tags and SHAs build from source.
+      Optional livekit-server version to run: latest, a release tag (e.g. v1.13.3 or 1.13.3),
+      or a commit SHA from github.com/livekit/livekit are supported. Defaults to latest if unspecified.
     required: false
     default: latest
   config:
@@ -39,6 +38,10 @@ runs:
         set -euo pipefail
         version="${VERSION_INPUT//[[:space:]]/}"
 
+        notify_source_build() {
+          echo "::notice title=Building livekit-server from source::$1"
+        }
+
         if [ -z "$version" ] || [ "$version" = "latest" ]; then
           if [ "${RUNNER_OS}" = "macOS" ]; then
             echo "mode=brew" >> "$GITHUB_OUTPUT"
@@ -57,6 +60,7 @@ runs:
         fi
 
         if [[ "$version" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+          notify_source_build "Commit $version requires a source build (git clone + go build). This typically takes several minutes."
           echo "mode=source" >> "$GITHUB_OUTPUT"
           echo "ref=$version" >> "$GITHUB_OUTPUT"
           echo "Resolved livekit-server commit: $version"
@@ -72,6 +76,7 @@ runs:
         if [[ "$ref" =~ ^v[0-9] ]]; then
           gh release view "$ref" --repo livekit/livekit >/dev/null
           if [ "${RUNNER_OS}" = "macOS" ]; then
+            notify_source_build "macOS has no release artifacts for $ref; building from source (git clone + go build). This typically takes several minutes."
             echo "mode=source" >> "$GITHUB_OUTPUT"
           else
             echo "mode=release" >> "$GITHUB_OUTPUT"

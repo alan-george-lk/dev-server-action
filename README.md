@@ -21,7 +21,7 @@ Pin a release tag or commit from [livekit/livekit](https://github.com/livekit/li
     version: v1.13.3
 ```
 
-Build from a specific commit (useful when testing server changes not yet released):
+Build from a specific commit:
 
 ```yaml
 - uses: livekit/dev-server-action@v1
@@ -29,8 +29,20 @@ Build from a specific commit (useful when testing server changes not yet release
     github-token: ${{ github.token }}
     version: a47e21b6cb945aabee88c98650366cef8cbf7a99
     config: |
-      enable_data_tracks: true
-      enable_participant_data_blob: true
+      logging:
+        level: debug
+```
+
+Pass in [config parameters](https://github.com/livekit/livekit/blob/master/config-sample.yaml) to further test specific features:
+
+```yaml
+- uses: livekit/dev-server-action@v1
+  with:
+    github-token: ${{ github.token }}
+    version: a47e21b6cb945aabee88c98650366cef8cbf7a99
+    config: |
+      logging:
+        level: debug
 ```
 
 ## Inputs
