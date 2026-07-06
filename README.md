@@ -6,7 +6,7 @@ Install and run a LiveKit server in development mode for end-to-end testing.
 
 ## Usage
 
-> Note: replace <sha> with pinned action or server version/commit SHA.
+> Note: replace `<sha>` with pinned action or server version/commit SHA.
 
 ```yaml
 - uses: livekit/dev-server-action@<sha>
