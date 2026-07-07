@@ -6,7 +6,7 @@ Install and run a LiveKit server in development mode for end-to-end testing.
 
 ## Usage
 
-> Note: replace `<sha>` with pinned action or server version/commit SHA.
+> Note: replace `<sha>` with pinned action or server commit SHA.
 
 ```yaml
 - uses: livekit/dev-server-action@<sha>
@@ -52,7 +52,7 @@ Pass in [config parameters](https://github.com/livekit/livekit/blob/master/confi
 | Name           | Required | Default  | Description                                                                        |
 | ---------------| ---------| ---------| -----------------------------------------------------------------------------------|
 | `github-token` | Yes      |          | Token used to download releases or resolve the latest tag.                         |
-| `version`      | No       | `latest` | `latest`, release tag (`v1.13.3` or `1.13.3`), or commit SHA from livekit/livekit. |
+| `version`      | No       | `latest` | Server version: `latest`, release tag (`v1.13.3` or `1.13.3`), or commit SHA.      |
 | `config`       | No       | `""`     | Server configuration YAML merged over the action's base dev config.                |
 
 Linux and Windows download release artifacts for tags. Commit SHAs and pinned tags on
